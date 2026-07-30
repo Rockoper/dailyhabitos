@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Habit;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/dashboard');
@@ -7,8 +8,12 @@ Route::redirect('/', '/dashboard');
 Route::middleware('auth')->group(function () {
     Route::view('/dashboard', 'pages.dashboard')->name('dashboard');
 
-    Route::view('/habitos/hoy', 'pages.coming-soon', ['title' => 'Hábitos de hoy'])->name('habits.today');
-    Route::view('/habitos', 'pages.coming-soon', ['title' => 'Todos los hábitos'])->name('habits.index');
+    Route::view('/habitos/hoy', 'pages.habits.today')->name('habits.today');
+    Route::view('/habitos', 'pages.habits.index')->name('habits.index');
+    Route::view('/habitos/crear', 'pages.habits.create')->name('habits.create');
+    Route::get('/habitos/{habit}/editar', fn (Habit $habit) => view('pages.habits.edit', ['habit' => $habit]))->name('habits.edit');
+    Route::get('/habitos/{habit}', fn (Habit $habit) => view('pages.habits.show', ['habit' => $habit]))->name('habits.show');
+
     Route::view('/calendario', 'pages.coming-soon', ['title' => 'Calendario anual'])->name('calendar.index');
     Route::view('/estadisticas', 'pages.coming-soon', ['title' => 'Estadísticas'])->name('stats.index');
     Route::view('/objetivos', 'pages.coming-soon', ['title' => 'Objetivos'])->name('goals.index');

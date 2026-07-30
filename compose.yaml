@@ -1,0 +1,149 @@
+# DailyHábitos — stack de producción para Synology (Docker Compose).
+#
+# Proyecto totalmente aislado: red, volúmenes y nombres de contenedor propios
+# (prefijo `dailyhabitos-`/`dailyhabitos_`). No comparte ni reutiliza nada de
+# otros proyectos (p. ej. VYA) que puedan correr en el mismo Synology.
+#
+# Ver docs/DEPLOYMENT_SYNOLOGY.md para el procedimiento completo de despliegue.
+
+name: dailyhabitos
+
+x-app-image: &app-image
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: app
+  image: dailyhabitos-app:latest
+  platform: linux/amd64
+  env_file:
+    - .env
+  environment:
+    TZ: America/Bogota
+  depends_on:
+    dailyhabitos-postgres:
+      condition: service_healthy
+    dailyhabitos-redis:
+      condition: service_healthy
+  volumes:
+    - dailyhabitos_storage:/var/www/html/storage
+  networks:
+    - dailyhabitos-network
+  restart: unless-stopped
+
+services:
+  dailyhabitos-postgres:
+    image: postgres:16-alpine
+    container_name: dailyhabitos-postgres
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      TZ: America/Bogota
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - dailyhabitos_postgres_data:/var/lib/postgresql/data
+    networks:
+      - dailyhabitos-network
+    # Sin `ports:` a propósito: solo alcanzable desde dailyhabitos-network,
+    # nunca publicado hacia el host ni hacia internet.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  dailyhabitos-redis:
+    image: redis:7-alpine
+    container_name: dailyhabitos-redis
+    platform: linux/amd64
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    environment:
+      TZ: America/Bogota
+    volumes:
+      - dailyhabitos_redis_data:/data
+    networks:
+      - dailyhabitos-network
+    # Sin `ports:` a propósito: mismo criterio que Postgres.
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  dailyhabitos-app:
+    <<: *app-image
+    container_name: dailyhabitos-app
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'php-fpm: master process' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  dailyhabitos-nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+    image: dailyhabitos-nginx:latest
+    container_name: dailyhabitos-nginx
+    platform: linux/amd64
+    restart: unless-stopped
+    depends_on:
+      dailyhabitos-app:
+        condition: service_healthy
+    ports:
+      # Puerto de pruebas internas en la LAN (p. ej. http://192.168.1.31:8180).
+      # Cuando Cloudflare Tunnel quede conectado, este puerto deja de ser
+      # necesario hacia el exterior; puede seguir publicado solo para la LAN.
+      - "${NGINX_PORT:-8180}:80"
+    networks:
+      - dailyhabitos-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  dailyhabitos-worker:
+    <<: *app-image
+    container_name: dailyhabitos-worker
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--max-time=3600"]
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'queue:work' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  dailyhabitos-scheduler:
+    <<: *app-image
+    container_name: dailyhabitos-scheduler
+    command: ["php", "artisan", "schedule:work"]
+    stop_grace_period: 15s
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'schedule:work' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+networks:
+  dailyhabitos-network:
+    name: dailyhabitos-network
+    driver: bridge
+
+volumes:
+  dailyhabitos_postgres_data:
+    name: dailyhabitos_postgres_data
+  dailyhabitos_redis_data:
+    name: dailyhabitos_redis_data
+  dailyhabitos_storage:
+    name: dailyhabitos_storage

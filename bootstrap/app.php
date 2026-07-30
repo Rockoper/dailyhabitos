@@ -12,7 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // En producción la app solo es alcanzable a través de Nginx y
+        // Cloudflare Tunnel (nunca expuesta directamente), así que se
+        // confía en las cabeceras X-Forwarded-* de ese proxy interno para
+        // que Laravel detecte HTTPS y genere URLs/cookies seguras
+        // correctamente. Ver docker/nginx/default.conf y
+        // docs/DEPLOYMENT_SYNOLOGY.md.
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PORT
+            | Request::HEADER_X_FORWARDED_PROTO);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

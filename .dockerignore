@@ -1,0 +1,69 @@
+# Control de versiones y entorno del editor/IDE — nunca deben viajar a la imagen.
+.git
+.gitattributes
+.gitignore
+.github
+.editorconfig
+.idea
+.vscode
+.zed
+.nova
+.cursor
+.codex
+.phpactor.json
+
+# Dependencias instaladas en el host: se instalan de nuevo dentro de cada
+# etapa del Dockerfile (composer install / pnpm install), nunca se copian.
+/vendor
+/node_modules
+
+# Nunca debe existir, pero por si acaso: solo pnpm-lock.yaml es válido.
+package-lock.json
+yarn.lock
+
+# Secretos y configuración local — jamás dentro de la imagen.
+.env
+.env.*
+!.env.example
+!.env.production.example
+auth.json
+
+# Bases de datos y artefactos locales de desarrollo.
+/database/*.sqlite
+/database/*.sqlite-journal
+
+# Contenido runtime de storage: se genera/monta como volumen, no se copia
+# el estado de desarrollo local a la imagen.
+/storage/app/*
+!/storage/app/.gitignore
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+/storage/logs/*
+!/storage/framework/cache/.gitignore
+!/storage/framework/sessions/.gitignore
+!/storage/framework/testing/.gitignore
+!/storage/framework/views/.gitignore
+!/storage/logs/.gitignore
+
+/public/build
+/public/hot
+/public/storage
+
+# Pruebas y documentación: no aportan nada en tiempo de ejecución.
+/tests
+/docs
+phpunit.xml
+.phpunit.result.cache
+/.phpunit.cache
+
+# Nota: `docker/`, `Dockerfile` y `compose.yaml` se dejan fuera de este
+# ignore a propósito — el propio Dockerfile los necesita en el contexto de
+# build (COPY docker/php/php.ini, COPY docker/entrypoint.sh). Que terminen
+# también copiados por el `COPY . .` final es inofensivo (no son secretos).
+
+README.md
+*.log
+Thumbs.db
+.DS_Store

@@ -19,6 +19,9 @@ x-app-image: &app-image
     - .env
   environment:
     TZ: America/Bogota
+    REDIS_HOST: dailyhabitos-redis
+    REDIS_PORT: "6379"
+    REDIS_PASSWORD: ${REDIS_PASSWORD}
   depends_on:
     dailyhabitos-postgres:
       condition: service_healthy
@@ -60,16 +63,26 @@ services:
     container_name: dailyhabitos-redis
     platform: linux/amd64
     restart: unless-stopped
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
     environment:
       TZ: America/Bogota
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD no configurada}
+    # La contraseña viaja solo por variable de entorno, nunca como argumento
+    # literal: si fuera `command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", ...]`,
+    # Compose interpolaría el valor real dentro de Config.Cmd (visible en
+    # texto plano vía `docker inspect`, incluso sin acceso al `.env`). Con
+    # `$$REDIS_PASSWORD` aquí, Compose NO la interpola: el shell del
+    # contenedor la resuelve en tiempo de ejecución desde su propio entorno.
+    command:
+      - /bin/sh
+      - -c
+      - exec redis-server --requirepass "$$REDIS_PASSWORD" --appendonly yes
     volumes:
       - dailyhabitos_redis_data:/data
     networks:
       - dailyhabitos-network
     # Sin `ports:` a propósito: mismo criterio que Postgres.
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$${REDIS_PASSWORD}\" redis-cli ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5

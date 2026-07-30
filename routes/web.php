@@ -22,6 +22,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/objetivos/{goal}/editar', fn (Goal $goal) => view('pages.goals.edit', ['goal' => $goal]))->name('goals.edit');
     Route::get('/objetivos/{goal}', fn (Goal $goal) => view('pages.goals.show', ['goal' => $goal]))->name('goals.show');
     Route::view('/reflexion', 'pages.reflections.index')->name('reflections.index');
-    Route::view('/historial', 'pages.coming-soon', ['title' => 'Historial'])->name('history.index');
+    Route::view('/historial', 'pages.history.index')->name('history.index');
     Route::view('/perfil', 'pages.coming-soon', ['title' => 'Perfil y configuración'])->name('profile.edit');
 });

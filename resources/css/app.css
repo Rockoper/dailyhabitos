@@ -1,0 +1,96 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/* Modo oscuro controlado por la clase `.dark` en <html> (ver x-theme-toggle), no solo por prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
+    --font-heading: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
+    /* Tokens de color — valores en modo claro tomados del design system de Stitch
+       (assets/10199802669095720763, ver docs/DESIGN_SYSTEM.md §2). */
+    --color-primary: #5b5a8b;
+    --color-primary-container: #bbb9f1;
+    --color-on-primary: #fbf7ff;
+    --color-on-primary-container: #363564;
+
+    --color-secondary: #5e5d72;
+    --color-secondary-container: #e3e0f9;
+    --color-on-secondary: #fbf7ff;
+    --color-on-secondary-container: #515064;
+
+    --color-tertiary: #755478;
+    --color-on-tertiary: #fff7fa;
+
+    --color-error: #a8364b;
+    --color-error-container: #f97386;
+    --color-on-error: #fff7f7;
+    --color-on-error-container: #6e0523;
+
+    --color-background: #fcf8fe;
+    --color-surface: #fcf8fe;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #f6f2fa;
+    --color-surface-container: #f0ecf6;
+    --color-surface-container-high: #eae6f1;
+    --color-surface-container-highest: #e4e1ed;
+    --color-on-surface: #32313b;
+    --color-on-surface-variant: #5f5e68;
+
+    --color-outline: #7b7984;
+    --color-outline-variant: #b3b0bc;
+}
+
+/*
+ * Modo oscuro: Stitch todavía no generó la variante `colorMode: DARK` del design system
+ * (pendiente, ver docs/DESIGN_SYSTEM.md §7). Estos valores se derivan siguiendo la
+ * convención estándar de Material 3 (se invierten los roles "tone 40 / tone 90") a partir
+ * de los tokens `inverse_*`, `*_fixed` y `*_dim` que sí devolvió Stitch, y deben
+ * reemplazarse por los valores exactos cuando se regenere el design system en oscuro.
+ */
+:root.dark {
+    --color-primary: #bbb9f1;
+    --color-primary-container: #3f3e6e;
+    --color-on-primary: #21204d;
+    --color-on-primary-container: #bbb9f1;
+
+    --color-secondary: #d5d2eb;
+    --color-secondary-container: #444258;
+    --color-on-secondary: #2f2e42;
+    --color-on-secondary-container: #e3e0f9;
+
+    --color-tertiary: #eec4ef;
+    --color-on-tertiary: #46254a;
+
+    --color-error: #f97386;
+    --color-error-container: #6b0221;
+    --color-on-error: #6e0523;
+    --color-on-error-container: #f97386;
+
+    --color-background: #131218;
+    --color-surface: #131218;
+    --color-surface-container-lowest: #0e0e12;
+    --color-surface-container-low: #1c1b21;
+    --color-surface-container: #201f26;
+    --color-surface-container-high: #2b2a31;
+    --color-surface-container-highest: #36353c;
+    --color-on-surface: #e4e1ed;
+    --color-on-surface-variant: #b3b0bc;
+
+    --color-outline: #8d8b96;
+    --color-outline-variant: #444350;
+}
+
+@layer base {
+    body {
+        @apply bg-background text-on-surface antialiased;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+}

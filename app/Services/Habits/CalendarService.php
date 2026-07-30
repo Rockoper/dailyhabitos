@@ -36,20 +36,37 @@ class CalendarService
         $yearStart = CarbonImmutable::create($year, 1, 1, 0, 0, 0, $timezone)->startOfDay();
         $yearEnd = CarbonImmutable::create($year, 12, 31, 0, 0, 0, $timezone)->startOfDay();
 
-        $evaluators = $habits->mapWithKeys(fn (Habit $habit) => [$habit->id => new HabitLogEvaluator($habit)]);
-
-        $days = collect();
-        $cursor = $yearStart;
-        while ($cursor->lte($yearEnd)) {
-            $days->put($cursor->format('Y-m-d'), $this->buildDay($habits, $evaluators, $cursor, $today));
-            $cursor = $cursor->addDay();
-        }
+        $days = $this->buildDays($habits, $yearStart, $yearEnd, $today);
 
         return [
             'days' => $days,
             'months' => $this->groupByMonth($days, $year),
             'summary' => $this->summarize($days, $today),
         ];
+    }
+
+    /**
+     * Construye el nivel de cumplimiento día por día en `[from, to]`. Es el
+     * bloque reutilizable que también usa `App\Services\Statistics\StatisticsService`
+     * (mapa de actividad, gráfica de evolución, rachas) para no recalcular ni
+     * volver a consultar `habit_logs`.
+     *
+     * @param  Collection<int, Habit>  $habits  Hábitos ya filtrados por el llamador, con `logs` cargado.
+     * @return Collection<string, array{date: CarbonImmutable, level: string, percentage: ?float, items: Collection}> indexada por 'Y-m-d'
+     */
+    public function buildDays(Collection $habits, CarbonImmutable $from, CarbonImmutable $to, CarbonImmutable $today): Collection
+    {
+        $evaluators = $habits->mapWithKeys(fn (Habit $habit) => [$habit->id => new HabitLogEvaluator($habit)]);
+
+        $days = collect();
+        $cursor = $from->startOfDay();
+        $to = $to->startOfDay();
+        while ($cursor->lte($to)) {
+            $days->put($cursor->format('Y-m-d'), $this->buildDay($habits, $evaluators, $cursor, $today));
+            $cursor = $cursor->addDay();
+        }
+
+        return $days;
     }
 
     /**
@@ -153,11 +170,17 @@ class CalendarService
      * Racha del calendario agregado (no confundir con StreakCalculator, que es
      * por hábito): días "completed" consecutivos, sin que los días "none"
      * (sin hábitos programados) la rompan, y sin que "hoy" la rompa si aún no
-     * se resolvió (pending/partial). Se calcula dentro del año recibido.
+     * se resolvió (pending/partial).
      *
+     * Público porque `StatisticsService` lo reutiliza para las tarjetas de
+     * racha global — ahí se le pasa el historial completo (sin recortar al
+     * periodo del filtro), ya que una racha es un hecho "a la fecha", no una
+     * métrica acotada a una ventana de análisis.
+     *
+     * @param  Collection<int, array{date: CarbonImmutable, level: string}>  $ordered  Días ordenados ascendentemente (ver `buildDays`).
      * @return array{0: int, 1: int} [racha actual, mejor racha]
      */
-    private function streaks(Collection $ordered, CarbonImmutable $today): array
+    public function streaks(Collection $ordered, CarbonImmutable $today): array
     {
         $longest = 0;
         $run = 0;

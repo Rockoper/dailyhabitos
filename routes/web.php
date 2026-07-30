@@ -15,7 +15,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/habitos/{habit}', fn (Habit $habit) => view('pages.habits.show', ['habit' => $habit]))->name('habits.show');
 
     Route::view('/calendario', 'pages.calendar.index')->name('calendar.index');
-    Route::view('/estadisticas', 'pages.coming-soon', ['title' => 'Estadísticas'])->name('stats.index');
+    Route::view('/estadisticas', 'pages.statistics.index')->name('stats.index');
     Route::view('/objetivos', 'pages.coming-soon', ['title' => 'Objetivos'])->name('goals.index');
     Route::view('/reflexion', 'pages.coming-soon', ['title' => 'Reflexión diaria'])->name('reflections.index');
     Route::view('/historial', 'pages.coming-soon', ['title' => 'Historial'])->name('history.index');

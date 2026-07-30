@@ -1,4 +1,5 @@
 @php
+use App\Support\Number;
 use Illuminate\Support\Str;
 
 $dayLevelClasses = [
@@ -128,7 +129,7 @@ $dayLevelLabels = [
                                             $isSelected = $selectedDay && $selectedDay['date']->isSameDay($day['date']);
                                             $isDimmed = $statusFilter && ! in_array($day['level'], ['none', 'future'], true) && $day['level'] !== $statusFilter;
                                             $label = $day['date']->translatedFormat('l j \d\e F').': '.$dayLevelLabels[$day['level']]
-                                                .($day['percentage'] !== null ? ' · '.rtrim(rtrim((string) $day['percentage'], '0'), '.').'% cumplido' : '');
+                                                .($day['percentage'] !== null ? ' · '.Number::trim($day['percentage']).'% cumplido' : '');
                                         @endphp
                                         <button
                                             type="button"

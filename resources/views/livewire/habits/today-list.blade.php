@@ -1,6 +1,7 @@
 @php
 use App\Enums\HabitType;
 use App\Enums\LogStatus;
+use App\Support\Number;
 @endphp
 
 <div>
@@ -77,7 +78,7 @@ use App\Enums\LogStatus;
                             <span class="text-sm text-on-surface-variant">
                                 {{ $habit->displayUnit() }}
                                 @if ($habit->target_quantity)
-                                    / meta {{ rtrim(rtrim((string) $habit->target_quantity, '0'), '.') }}
+                                    / meta {{ Number::trim($habit->target_quantity) }}
                                 @endif
                             </span>
                             <x-button type="button" wire:click="logQuantity({{ $habit->id }})" variant="ghost" class="w-auto px-3 py-1.5 text-xs">

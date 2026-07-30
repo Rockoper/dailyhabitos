@@ -1,5 +1,6 @@
 @php
 use App\Enums\LogStatus;
+use App\Support\Number;
 @endphp
 
 <div x-data="{ confirmingDelete: false }" class="mx-auto max-w-3xl space-y-6">
@@ -73,7 +74,7 @@ use App\Enums\LogStatus;
                 <span class="text-sm text-on-surface-variant">
                     {{ $habit->displayUnit() }}
                     @if ($habit->target_quantity)
-                        / meta {{ rtrim(rtrim((string) $habit->target_quantity, '0'), '.') }}
+                        / meta {{ Number::trim($habit->target_quantity) }}
                     @endif
                 </span>
                 <x-button type="button" wire:click="logQuantity" variant="ghost" class="w-auto px-4">Guardar</x-button>
@@ -137,7 +138,7 @@ use App\Enums\LogStatus;
                             <tr>
                                 <td class="py-2 text-on-surface">{{ $log->date->translatedFormat('j M Y') }}</td>
                                 <td class="py-2"><x-status-badge :status="$log->status" /></td>
-                                <td class="py-2 text-on-surface-variant">{{ $log->quantity_value !== null ? rtrim(rtrim((string) $log->quantity_value, '0'), '.') : '—' }}</td>
+                                <td class="py-2 text-on-surface-variant">{{ $log->quantity_value !== null ? Number::trim($log->quantity_value) : '—' }}</td>
                                 <td class="py-2 text-on-surface-variant">
                                     @if ($log->note)
                                         <x-icon name="note" class="h-4 w-4" />

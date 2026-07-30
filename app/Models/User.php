@@ -45,4 +45,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(HabitLog::class);
     }
+
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class);
+    }
 }

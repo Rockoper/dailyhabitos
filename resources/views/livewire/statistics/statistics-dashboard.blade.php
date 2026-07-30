@@ -1,4 +1,5 @@
 @php
+use App\Support\Number;
 use Illuminate\Support\Str;
 
 $kpiCards = [
@@ -185,7 +186,7 @@ $dayLevelClasses = [
 
                         @foreach ($points as $i => $point)
                             <circle cx="{{ round($i * $stepX, 1) }}" cy="{{ round($chartH - ($point['value'] / $maxValue) * $chartH, 1) }}" r="3" class="fill-primary">
-                                <title>{{ $point['label'] }}: {{ rtrim(rtrim((string) $point['value'], '0'), '.') }}{{ $unit }}</title>
+                                <title>{{ $point['label'] }}: {{ Number::trim($point['value']) }}{{ $unit }}</title>
                             </circle>
                         @endforeach
                     </svg>

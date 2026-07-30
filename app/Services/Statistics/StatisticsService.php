@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Habit;
 use App\Services\Habits\CalendarService;
 use App\Services\Habits\StreakCalculator;
+use App\Support\Number;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -435,13 +436,13 @@ class StatisticsService
         $best = $withPercentage->sortByDesc('percentage')->first();
         if ($best && $best['percentage'] >= 70) {
             $name = $best['habit']->is_private ? 'Hábito privado' : $best['habit']->name;
-            $insights[] = sprintf('%s es tu hábito con mejor rendimiento este periodo (%s%%).', $name, rtrim(rtrim((string) $best['percentage'], '0'), '.'));
+            $insights[] = sprintf('%s es tu hábito con mejor rendimiento este periodo (%s%%).', $name, Number::trim($best['percentage']));
         }
 
         $worst = $withPercentage->sortBy('percentage')->first();
         if ($worst && $worst['percentage'] < 50 && (! $best || $worst['habit']->id !== $best['habit']->id)) {
             $name = $worst['habit']->is_private ? 'Hábito privado' : $worst['habit']->name;
-            $insights[] = sprintf('%s necesita más atención (%s%% de cumplimiento).', $name, rtrim(rtrim((string) $worst['percentage'], '0'), '.'));
+            $insights[] = sprintf('%s necesita más atención (%s%% de cumplimiento).', $name, Number::trim($worst['percentage']));
         }
 
         return array_slice($insights, 0, 5);

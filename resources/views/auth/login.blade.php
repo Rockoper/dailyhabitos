@@ -39,9 +39,4 @@
 
         <x-button type="submit">Iniciar sesión</x-button>
     </form>
-
-    <p class="text-center text-sm text-on-surface-variant">
-        ¿No tienes una cuenta?
-        <a href="{{ route('register') }}" class="font-medium text-primary hover:underline">Crear cuenta</a>
-    </p>
 </x-layouts.guest>

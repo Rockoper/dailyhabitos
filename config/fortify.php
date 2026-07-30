@@ -162,7 +162,7 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Features::registration(), // deshabilitado: app privada de un solo usuario, no se permite auto-registro.
         Features::resetPasswords(),
         // Features::emailVerification(),
         Features::updateProfileInformation(),

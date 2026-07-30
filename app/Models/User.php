@@ -50,4 +50,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Goal::class);
     }
+
+    public function dailyReflections(): HasMany
+    {
+        return $this->hasMany(DailyReflection::class);
+    }
 }
